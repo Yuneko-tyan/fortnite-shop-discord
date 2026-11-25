@@ -1,10 +1,11 @@
 
-from datetime import datetime, timezone
-from urllib.parse import quote
 import os
 import json
 import time
 import requests
+
+from datetime import datetime, timezone
+from urllib.parse import quote
 
 API_URL = "https://itemshop.gg/api/v1/shop/fortnite"
 WEBHOOK = os.environ["DISCORD_WEBHOOK_URL"]
@@ -12,6 +13,8 @@ STATE_FILE = "state.json"
 ITEMSHOP_API_KEY = os.environ.get(
     "ITEMSHOP_API_KEY", ""
 ).strip()
+
+RARE_DAYS = 180
 
 def send_discord(payload):
     for attempt in range(5):
@@ -72,6 +75,7 @@ def price_text(item):
     return result
 
 
+
 def rarity_color(item):
     rarity = item.get("rarity") or {}
     color = rarity.get("color", "#5865F2")
@@ -83,86 +87,6 @@ def rarity_color(item):
 
 
 def make_embed(item, shop_date, attribution):
-    ITEMSHOP_API_KEY = os.environ.get("ITEMSHOP_API_KEY", "").strip()
-    RARE_DAYS = 180
-
-
-def find_rare_returns(items, shop_date):
-    if not ITEMSHOP_API_KEY:
-        raise RuntimeError(
-            "Missing ITEMSHOP_API_KEY GitHub Secret"
-        )
-
-    headers = {
-        "Authorization": f"Bearer {ITEMSHOP_API_KEY}",
-        "User-Agent": "FortniteShopDiscord/1.0"
-    }
-
-
-    rare_items = []
-
-    for item in items:
-        if (item.get("type") or "").lower() != "outfit":
-            continue
-
-        item_key = item.get("itemKey")
-
-        if not item_key:
-            continue
-
-        url = (
-            "https://itemshop.gg/api/v1/items/fortnite/"
-            + quote(item_key, safe=":")
-        )
-
-        response = requests.get(
-            url,
-            headers=headers,
-            timeout=20
-        )
-
-        if response.status_code == 404:
-            continue
-
-        response.raise_for_status()
-
-        data = response.json()["data"]
-        stays = data.get("stays", [])
-
-        # Ignore current appearance and find previous visits
-        previous_stays = [
-            stay for stay in stays
-            if stay.get("state") == "past"
-            and stay.get("end")
-        ]
-
-        if not previous_stays:
-            continue
-
-        last_end = max(
-            stay["end"] for stay in previous_stays
-        )
-
-        last_date = datetime.fromisoformat(
-            last_end.replace("Z", "+00:00")
-        )
-
-        current_date = datetime.fromisoformat(
-            shop_date
-        ).replace(tzinfo=timezone.utc)
-
-        days_absent = (
-            current_date - last_date
-        ).days
-
-        if days_absent >= RARE_DAYS:
-            rare_items.append({
-                "item": item,
-                "days": days_absent
-            })
-
-    return rare_items
-
     rarity = item.get("rarity") or {}
     images = item.get("images") or {}
 
@@ -197,6 +121,82 @@ def find_rare_returns(items, shop_date):
         }
 
     return embed
+
+
+def find_rare_returns(items, shop_date):
+    if not ITEMSHOP_API_KEY:
+        raise RuntimeError(
+            "Missing ITEMSHOP_API_KEY GitHub Secret"
+        )
+
+    headers = {
+        "Authorization": f"Bearer {ITEMSHOP_API_KEY}",
+        "User-Agent": "FortniteShopDiscord/1.0"
+    }
+
+    rare_items = []
+
+    for item in items:
+        if (item.get("type") or "").lower() != "outfit":
+            continue
+
+        item_key = item.get("itemKey")
+
+        if not item_key:
+            continue
+
+        url = (
+            "https://itemshop.gg/api/v1/items/fortnite/"
+            + quote(item_key, safe=":")
+        )
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=20
+        )
+
+        if response.status_code == 404:
+            continue
+
+        response.raise_for_status()
+
+        data = response.json()["data"]
+        stays = data.get("stays", [])
+
+        previous_stays = [
+            stay for stay in stays
+            if stay.get("state") == "past"
+            and stay.get("end")
+        ]
+
+        if not previous_stays:
+            continue
+
+        last_end = max(
+            stay["end"] for stay in previous_stays
+        )
+
+        last_date = datetime.fromisoformat(
+            last_end.replace("Z", "+00:00")
+        )
+
+        current_date = datetime.fromisoformat(
+            shop_date
+        ).replace(tzinfo=timezone.utc)
+
+        days_absent = (
+            current_date - last_date
+        ).days
+
+        if days_absent >= RARE_DAYS:
+            rare_items.append({
+                "item": item,
+                "days": days_absent
+            })
+
+    return rare_items
+
 
 
 def send_batches(embeds, content):
