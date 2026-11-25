@@ -11,36 +11,41 @@ if not APP_ID.isdigit():
     raise SystemExit("Ошибка: Application ID должен состоять только из цифр.")
 
 commands = [
-    {
-        "name": "favorite",
-        "description": "Управление избранными предметами Fortnite",
-        "options": [
-    {
-        "type": 3,
-        "name": "name",
-        "description": "Название предмета",
-        "required": True
-    },
-    {
-        "type": 3,
-        "name": "item_type",
-        "description": "Категория предмета",
-        "required": True,
-        "choices": [
-            {"name": "Скин", "value": "outfit"},
-            {"name": "Эмоция", "value": "emote"},
-            {"name": "Музыка", "value": "music"},
-            {"name": "Кирка", "value": "pickaxe"},
-            {"name": "Рюкзак", "value": "backpack"},
-            {"name": "Дельтаплан", "value": "glider"},
-            {"name": "Обёртка", "value": "wrap"},
-            {"name": "След", "value": "contrail"},
-            {"name": "Инструмент", "value": "instrument"},
-            {"name": "Транспорт", "value": "vehicle"}
-        ]
-    }
-]
-            },
+  {
+    "name": "favorite",
+    "description": "Управление избранными предметами Fortnite",
+    "options": [
+        {
+            "type": 1,
+            "name": "add",
+            "description": "Добавить предмет в избранное",
+            "options": [
+                {
+                    "type": 3,
+                    "name": "name",
+                    "description": "Название предмета",
+                    "required": True
+                },
+                {
+                    "type": 3,
+                    "name": "item_type",
+                    "description": "Категория предмета",
+                    "required": True,
+                    "choices": [
+                        {"name": "Скин", "value": "outfit"},
+                        {"name": "Эмоция", "value": "emote"},
+                        {"name": "Музыка", "value": "music"},
+                        {"name": "Кирка", "value": "pickaxe"},
+                        {"name": "Рюкзак", "value": "backpack"},
+                        {"name": "Дельтаплан", "value": "glider"},
+                        {"name": "Обёртка", "value": "wrap"},
+                        {"name": "След", "value": "contrail"},
+                        {"name": "Инструмент", "value": "instrument"},
+                        {"name": "Транспорт", "value": "vehicle"}
+                    ]
+                }
+            ]
+        },
             {
                 "type": 1,
                 "name": "remove",
