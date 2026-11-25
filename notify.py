@@ -464,12 +464,11 @@ def main():
     initialized = state.get("initialized", False)
 
     
-    
-published_keys = set(state.get("published_shop_item_keys", []))
-
-if state.get("published_shop_date") != shop_date:
-   
     published_keys = set(state.get("published_shop_item_keys", []))
+    
+    if state.get("published_shop_date") != shop_date:
+        
+        published_keys = set(state.get("published_shop_item_keys", []))
 
     if state.get("published_shop_date") != shop_date:
         published_keys = set()
