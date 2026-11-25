@@ -52,7 +52,8 @@ def push_favorites(shop_date, items):
 
     favorite_items = []
     seen_names = set()
-        allowed_types = {
+    
+    allowed_types = {
         "outfit",
         "emote",
         "backpack",
