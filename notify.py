@@ -53,7 +53,7 @@ def push_favorites(shop_date, items):
     favorite_items = []
     seen_names = set()
 
-        allowed_types = {
+    allowed_types = {
         "outfit",
         "emote",
         "backpack",
@@ -76,15 +76,14 @@ def push_favorites(shop_date, items):
             continue
 
         seen_names.add(key)
-        # Worker favorites are stored by normalized display name.
         favorite_items.append({"name": name})
 
     if not favorite_items:
-        print("No outfit names to send for personal favorites.", flush=True)
+        print("No supported items to send for personal favorites.", flush=True)
         return
 
     print(
-        f"Sending {len(favorite_items)} outfit names to favorites Worker...",
+        f"Sending {len(favorite_items)} items to favorites Worker...",
         flush=True
     )
 
