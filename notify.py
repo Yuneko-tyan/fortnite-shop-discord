@@ -46,7 +46,8 @@ def send_discord(payload):
     raise RuntimeError("Discord rate limit: retries exhausted")
 
 
-def push_favorites(shop_date, items):
+
+def push_favorites(shop_date, items, attribution, publish_shop=True):
     if not SHOP_PUSH_SECRET:
         raise RuntimeError("Missing SHOP_PUSH_SECRET GitHub Secret")
 
@@ -59,8 +60,7 @@ def push_favorites(shop_date, items):
         "glider", "contrail", "instrument", "vehicle",
         "car", "body", "decal", "spray", "toy",
         "pet", "sidekick", "loadingscreen", "loading_screen",
-        "banner", "emoji", "track", "consumable",
-        "bundle"
+        "banner", "emoji", "track", "consumable", "bundle"
     }
 
     for item in items:
@@ -73,11 +73,9 @@ def push_favorites(shop_date, items):
             continue
 
         name = str(item.get("name") or "").strip()
-        
+
         normalized_type = (
-            "pet"
-            if item_type == "sidekick"
-            else item_type
+            "pet" if item_type == "sidekick" else item_type
         )
 
         key = f"{normalized_type}:{' '.join(name.lower().split())}"
@@ -88,12 +86,14 @@ def push_favorites(shop_date, items):
         seen_names.add(key)
 
         favorite_items.append({
+            **item,
             "name": name,
-            "type": normalized_type
+            "type": normalized_type,
+            "embed": make_embed(item, shop_date, attribution)
         })
 
     if not favorite_items:
-        print("No supported items to send for personal favorites.", flush=True)
+        print("No supported items to send.", flush=True)
         return
 
     print(
@@ -104,19 +104,20 @@ def push_favorites(shop_date, items):
     response = requests.post(
         SHOP_PUSH_URL,
         headers={"Authorization": f"Bearer {SHOP_PUSH_SECRET}"},
-        json={"shop_date": shop_date, "items": favorite_items},
+        json={
+            "shop_date": shop_date,
+            "items": favorite_items,
+            "publish_shop": publish_shop
+        },
         timeout=WORKER_TIMEOUT
     )
     response.raise_for_status()
 
-    result = response.json()
     print(
-        "Personal favorite notifications: "
-        f"sent={result.get('sent', 0)}, "
-        f"failed={result.get('failed', 0)}, "
-        f"skipped={result.get('skipped', 0)}",
+        "Worker response: " + response.text,
         flush=True
     )
+
 
 
 def load_state():
@@ -351,23 +352,15 @@ def main():
             items.append(item)
 
     print(f"Collected {len(items)} shop items.", flush=True)
-    print(
-    "PERFECT NIGHT ITEMS:",
-    [
-        {
-            "name": item.get("name"),
-            "type": item.get("type"),
-            "itemKey": item.get("itemKey")
-        }
-        for item in items
-        if "perfect night" in str(item.get("name") or "").lower()
-    ],
-    flush=True
-)
 
     # Personal notifications must never block the existing public webhook.
     try:
-        push_favorites(shop_date, items)
+        push_favorites(
+            shop_date,
+            items,
+            attribution,
+            publish_shop=not already_sent
+        )
     except Exception as error:
         print(
             f"WARNING: Personal favorites notification failed: {error}",
