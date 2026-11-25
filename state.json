@@ -500,5 +500,7 @@
     "fn:item:sid_placeholder_998",
     "v2:/353181312708b0a0ea31605a9e688b1fec31e6e582936c8a57508faa5fdd77b7"
   ],
-  "initialized": true
+  "initialized": true,
+  "published_shop_date": "2026-11-25",
+  "published_shop_item_keys": []
 }
