@@ -13,29 +13,49 @@ if not APP_ID.isdigit():
 commands = [
     {
         "name": "favorite",
-        "description": "Управление избранными скинами Fortnite",
+        "description": "Управление избранными предметами Fortnite",
         "options": [
             {
                 "type": 1,
                 "name": "add",
-                "description": "Добавить скин в избранное",
+                "description": "Добавить предмет в избранное",
                 "options": [{
                     "type": 3,
                     "name": "name",
-                    "description": "Название скина",
+                    "description": "Название предмета",
                     "required": True
                 }]
             },
             {
                 "type": 1,
                 "name": "remove",
-                "description": "Удалить скин из избранного",
-                "options": [{
-                    "type": 3,
-                    "name": "name",
-                    "description": "Название скина",
-                    "required": True
-                }]
+                "description": "Удалить предмет из избранного",
+                "options": [
+    {
+        "type": 3,
+        "name": "name",
+        "description": "Название предмета Fortnite",
+        "required": True
+    },
+    {
+        "type": 3,
+        "name": "item_type",
+        "description": "Категория предмета",
+        "required": True,
+        "choices": [
+            {"name": "Скин", "value": "outfit"},
+            {"name": "Эмоция", "value": "emote"},
+            {"name": "Музыка", "value": "music"},
+            {"name": "Кирка", "value": "pickaxe"},
+            {"name": "Рюкзак", "value": "backpack"},
+            {"name": "Дельтаплан", "value": "glider"},
+            {"name": "Обёртка", "value": "wrap"},
+            {"name": "След", "value": "contrail"},
+            {"name": "Инструмент", "value": "instrument"},
+            {"name": "Транспорт", "value": "vehicle"}
+        ]
+    }
+]
             },
             {
                 "type": 1,
@@ -51,7 +71,7 @@ commands = [
     },
     {
         "name": "notify",
-        "description": "Настроить уведомления о любимых скинах",
+        "description": "Настроить уведомления о любимых предметах",
         "options": [
             {
                 "type": 3,
