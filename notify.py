@@ -518,8 +518,9 @@ def main():
         if is_new:
             new_skins.append(item)
 
+    
     if new_skins:
-        skin_embeds = []
+        print("Sending individual new skin cards...", flush=True)
 
         for item in new_skins:
             embed = make_embed(item, shop_date, attribution)
@@ -527,12 +528,14 @@ def main():
                 "✨ НОВЫЙ СКИН: "
                 + (item.get("name") or "Unknown")
             )[:256]
-            skin_embeds.append(embed)
 
-        send_batches(
-            skin_embeds,
-            "🚨 **НОВЫЕ СКИНЫ В МАГАЗИНЕ FORTNITE!**"
-        )
+            send_shop_item({
+                **item,
+                "embed": embed
+            })
+
+            time.sleep(0.5)
+
         print(f"New skins: {len(new_skins)}", flush=True)
     else:
         print("No new skins", flush=True)
