@@ -35,6 +35,8 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           ITEMSHOP_API_KEY: ${{ secrets.ITEMSHOP_API_KEY }}
           SHOP_PUSH_SECRET: ${{ secrets.SHOP_PUSH_SECRET }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          SHOP_CHANNEL_ID: "1574281406731919480"
         run: python notify.py
 
       - name: Save shop state
