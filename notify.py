@@ -64,9 +64,13 @@ def push_favorites(shop_date, items):
     }
 
     for item in items:
-        item_type = str(item.get("type") or "").lower().replace(" ", "")
-        if item_type not in allowed_types:
-            continue
+       item_type = str(item.get("type") or "").lower().replace(" ", "")
+
+if item_type.startswith("jamtrack"):
+    item_type = "music"
+
+if item_type not in allowed_types:
+    continue
 
         name = str(item.get("name") or "").strip()
 
