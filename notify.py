@@ -100,6 +100,7 @@ def find_rare_returns(items, shop_date):
         "User-Agent": "FortniteShopDiscord/1.0"
     }
 
+
     rare_items = []
 
     for item in items:
