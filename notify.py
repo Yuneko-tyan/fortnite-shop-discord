@@ -336,7 +336,7 @@ def main():
             flush=True
         )
 
-        if already_sent:
+    if already_sent:
         print(
             "Shop already sent; personal favorites checked.",
             flush=True
