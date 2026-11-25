@@ -28,6 +28,7 @@ MAX_RARE_CHECKS = 20
 MAX_RARE_CHECK_SECONDS = 180
 
 
+
 def send_discord(payload):
     for attempt in range(5):
         response = requests.post(
@@ -36,18 +37,33 @@ def send_discord(payload):
             timeout=WEBHOOK_TIMEOUT
         )
 
-    if response.status_code == 429:
-        delay = min(float(response.headers.get("Retry-After", 5)), 30)
-        time.sleep(delay + 1)
-        raise RuntimeError("Discord rate limit reached; retry workflow later")
-            print(f"Discord rate limit. Waiting {delay}s", flush=True)
+        if response.status_code == 429:
+            delay = min(
+                float(response.headers.get("Retry-After", 5)),
+                30
+            )
+
+            if attempt == 4:
+                raise RuntimeError(
+                    "Discord rate limit: retries exhausted"
+                )
+
+            print(
+                f"Discord rate limit. Waiting {delay}s",
+                flush=True
+            )
             time.sleep(delay + 1)
             continue
 
-        response.raise_for_status()
+        if not response.ok:
+            raise RuntimeError(
+                f"Discord webhook error: "
+                f"{response.status_code} {response.text[:500]}"
+            )
+
         return
 
-    raise RuntimeError("Discord rate limit: retries exhausted")
+    raise RuntimeError("Discord message was not sent")
 
 
 
