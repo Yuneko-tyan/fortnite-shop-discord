@@ -9,6 +9,9 @@ import requests
 API_URL = "https://itemshop.gg/api/v1/shop/fortnite"
 WEBHOOK = os.environ["DISCORD_WEBHOOK_URL"]
 STATE_FILE = "state.json"
+ITEMSHOP_API_KEY = os.environ.get(
+    "ITEMSHOP_API_KEY", ""
+).strip()
 
 def send_discord(payload):
     for attempt in range(5):
