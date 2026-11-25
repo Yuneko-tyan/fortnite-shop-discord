@@ -93,7 +93,14 @@ def push_favorites(shop_date, items):
             continue
 
         seen_names.add(key)
-        favorite_items.append({"name": name})
+        favorite_items.append({
+    "name": name,
+    "type": (
+        "music"
+        if item_type in {"jamtrack", "jam_track"}
+        else item_type
+    )
+})
 
     if not favorite_items:
         print("No supported items to send for personal favorites.", flush=True)
