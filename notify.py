@@ -435,19 +435,26 @@ def main():
     previous_keys = set(state.get("seen_item_keys", []))
     initialized = state.get("initialized", False)
 
-    embeds = [
-        make_embed(item, shop_date, attribution)
-        for item in items
-    ]
+    
+    if items:
+    print("Sending individual shop cards to Discord...", flush=True)
 
-    if embeds:
-        print("Sending complete shop to Discord...", flush=True)
-        send_batches(
-            embeds,
-            f"🛒 **FORTNITE ITEM SHOP — {shop_date}**\n"
-            f"Предметов в магазине: **{len(items)}**\n"
-            f"Источник: {attribution}"
+    for index, item in enumerate(items, start=1):
+        embed = make_embed(item, shop_date, attribution)
+
+        send_shop_item({
+            **item,
+            "embed": embed
+        })
+
+        print(
+            f"Published shop card {index}/{len(items)}: "
+            f"{item.get('name', 'Unknown')}",
+            flush=True
         )
+
+        time.sleep(0.5)
+
 
     new_skins = []
 
