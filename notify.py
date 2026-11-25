@@ -50,13 +50,14 @@ def send_discord(payload):
     raise RuntimeError("Discord rate limit: retries exhausted")
 
 
+
 def send_shop_item(item):
     if not DISCORD_BOT_TOKEN or not SHOP_CHANNEL_ID:
         raise RuntimeError("Missing Discord bot token or shop channel ID")
 
     item_type = str(item.get("type") or "outfit").lower().replace(" ", "")
 
-    if item_type.startswith("jamtrack"):
+    if item_type.startswith("jamtrack") or item_type == "jam_track":
         item_type = "music"
     elif item_type == "sidekick":
         item_type = "pet"
@@ -67,6 +68,11 @@ def send_shop_item(item):
         return
 
     custom_id = f"favorite|{item_type}|{quote(name, safe='')}"
+
+    if len(custom_id) > 100:
+        raise RuntimeError(
+            f"Button ID is too long for item: {name}"
+        )
 
     embed = item.get("embed") or {}
 
@@ -87,25 +93,44 @@ def send_shop_item(item):
         ]
     }
 
-    response = requests.post(
-        f"{DISCORD_API_URL}/channels/{SHOP_CHANNEL_ID}/messages",
-        headers={
-            "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
-            "Content-Type": "application/json"
-        },
-        json=payload,
-        timeout=WEBHOOK_TIMEOUT
-    )
+    for attempt in range(5):
+        response = requests.post(
+            f"{DISCORD_API_URL}/channels/{SHOP_CHANNEL_ID}/messages",
+            headers={
+                "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
+                "Content-Type": "application/json"
+            },
+            json=payload,
+            timeout=WEBHOOK_TIMEOUT
+        )
 
-    if response.status_code == 429:
-        delay = min(float(response.headers.get("Retry-After", 5)), 30)
-        time.sleep(delay + 1)
-        return send_shop_item(item)
+        if response.status_code == 429:
+            delay = min(
+                float(response.headers.get("Retry-After", 5)),
+                30
+            )
 
-    response.raise_for_status()
+            if attempt == 4:
+                raise RuntimeError("Discord rate limit: retries exhausted")
+
+            print(f"Discord rate limit. Waiting {delay}s", flush=True)
+            time.sleep(delay + 1)
+            continue
+
+        if not response.ok:
+            raise RuntimeError(
+                f"Discord shop message error: "
+                f"{response.status_code} {response.text[:500]}"
+            )
+
+        return
+
+    raise RuntimeError("Discord message was not sent")
 
 
-def push_favorites(shop_date, items, attribution, publish_shop=True):
+
+
+def push_favorites(shop_date, items):
     if not SHOP_PUSH_SECRET:
         raise RuntimeError("Missing SHOP_PUSH_SECRET GitHub Secret")
 
@@ -132,9 +157,7 @@ def push_favorites(shop_date, items, attribution, publish_shop=True):
 
         name = str(item.get("name") or "").strip()
 
-        normalized_type = (
-            "pet" if item_type == "sidekick" else item_type
-        )
+        normalized_type = "pet" if item_type == "sidekick" else item_type
 
         key = f"{normalized_type}:{' '.join(name.lower().split())}"
 
@@ -144,50 +167,42 @@ def push_favorites(shop_date, items, attribution, publish_shop=True):
         seen_names.add(key)
 
         favorite_items.append({
-            **item,
             "name": name,
-            "type": normalized_type,
-            "embed": make_embed(item, shop_date, attribution)
+            "type": normalized_type
         })
 
     if not favorite_items:
-        print("No supported items to send.", flush=True)
+        print("No supported items to send for personal favorites.", flush=True)
         return
-
-    print(
-        f"Sending {len(favorite_items)} items to favorites Worker...",
-        flush=True
-    )
 
     response = requests.post(
         SHOP_PUSH_URL,
         headers={"Authorization": f"Bearer {SHOP_PUSH_SECRET}"},
-        json={
-            "shop_date": shop_date,
-            "items": favorite_items,
-            "publish_shop": publish_shop
-        },
+        json={"shop_date": shop_date, "items": favorite_items},
         timeout=WORKER_TIMEOUT
     )
     response.raise_for_status()
 
-    print(
-        "Worker response: " + response.text,
-        flush=True
-    )
+    print("Personal favorites notification request completed.", flush=True)
 
 
 
 def load_state():
     try:
         with open(STATE_FILE, encoding="utf-8") as f:
-            return json.load(f)
+            state = json.load(f)
     except FileNotFoundError:
-        return {
+        state = {
             "last_shop_date": None,
             "seen_item_keys": [],
             "initialized": False
         }
+
+    state.setdefault("published_shop_date", None)
+    state.setdefault("published_shop_item_keys", [])
+
+    return state
+
 
 
 def save_state(state):
@@ -413,12 +428,9 @@ def main():
 
     # Personal notifications must never block the existing public webhook.
     try:
-        push_favorites(
-            shop_date,
-            items,
-            attribution,
-            publish_shop=not already_sent
-        )
+        
+        push_favorites(shop_date, items)
+        
     except Exception as error:
         print(
             f"WARNING: Personal favorites notification failed: {error}",
