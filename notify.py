@@ -53,7 +53,7 @@ def push_favorites(shop_date, items):
     favorite_items = []
     seen_names = set()
 
-    allowed_types = {
+        allowed_types = {
         "outfit",
         "emote",
         "backpack",
@@ -61,7 +61,24 @@ def push_favorites(shop_date, items):
         "wrap",
         "music",
         "jamtrack",
-        "jam_track"
+        "jam_track",
+        "glider",
+        "contrail",
+        "instrument",
+        "vehicle",
+        "car",
+        "body",
+        "decal",
+        "spray",
+        "toy",
+        "pet",
+        "loadingscreen",
+        "loading_screen",
+        "banner",
+        "emoji",
+        "track",
+        "consumable",
+        "bundle"
     }
 
     for item in items:
