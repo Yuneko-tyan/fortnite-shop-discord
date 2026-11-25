@@ -464,58 +464,48 @@ def main():
     initialized = state.get("initialized", False)
 
     
-    published_keys = set(state.get("published_shop_item_keys", []))
     
+published_keys = set(state.get("published_shop_item_keys", []))
+
+if state.get("published_shop_date") != shop_date:
+   
+    published_keys = set(state.get("published_shop_item_keys", []))
+
     if state.get("published_shop_date") != shop_date:
         published_keys = set()
         state["published_shop_date"] = shop_date
         state["published_shop_item_keys"] = []
         save_state(state)
-        
-        if items:
-            print("Sending individual shop cards to Discord...", flush=True)
-            
-            for index, item in enumerate(items, start=1):
-                key = str(item.get("itemKey") or item.get("id") or "")
-    
-        if not key or key in published_keys:
-            continue
 
-        embed = make_embed(item, shop_date, attribution)
+    if items:
+        print("Sending individual shop cards to Discord...", flush=True)
 
-        send_shop_item({
-            **item,
-            "embed": embed
-        })
+        for index, item in enumerate(items, start=1):
+            key = str(item.get("itemKey") or item.get("id") or "")
 
-        published_keys.add(key)
-        state["published_shop_item_keys"] = sorted(published_keys)
-        save_state(state)
+            if not key or key in published_keys:
+                continue
 
-        print(
-            f"Published shop card {index}/{len(items)}: "
-            f"{item.get('name', 'Unknown')}",
-            flush=True
-        )
+            embed = make_embed(item, shop_date, attribution)
 
-        time.sleep(0.5)
+            send_shop_item({
+                **item,
+                "embed": embed
+            })
+
+            published_keys.add(key)
+            state["published_shop_item_keys"] = sorted(published_keys)
+            save_state(state)
+
+            print(
+                f"Published shop card {index}/{len(items)}: "
+                f"{item.get('name', 'Unknown')}",
+                flush=True
+            )
+
+            time.sleep(0.5)
 
 
-    for index, item in enumerate(items, start=1):
-        embed = make_embed(item, shop_date, attribution)
-
-        send_shop_item({
-            **item,
-            "embed": embed
-        })
-
-        print(
-            f"Published shop card {index}/{len(items)}: "
-            f"{item.get('name', 'Unknown')}",
-            flush=True
-        )
-
-        time.sleep(0.5)
 
 
     new_skins = []
