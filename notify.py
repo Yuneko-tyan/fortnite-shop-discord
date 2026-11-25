@@ -297,9 +297,7 @@ def main():
 
     shop_date = shop["shopDate"]
 
-    if state["last_shop_date"] == shop_date:
-        print("Shop already sent; nothing to do.", flush=True)
-        return
+    already_sent = state["last_shop_date"] == shop_date
 
     attribution = (
         payload.get("meta", {})
@@ -337,6 +335,13 @@ def main():
             f"WARNING: Personal favorites notification failed: {error}",
             flush=True
         )
+
+        if already_sent:
+        print(
+            "Shop already sent; personal favorites checked.",
+            flush=True
+        )
+        return
 
     previous_keys = set(state.get("seen_item_keys", []))
     initialized = state.get("initialized", False)
