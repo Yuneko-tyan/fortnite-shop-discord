@@ -13,6 +13,9 @@ ITEMSHOP_API_KEY = os.environ.get("ITEMSHOP_API_KEY", "").strip()
 
 SHOP_PUSH_URL = "https://fortnite-favorites.kornouxova1998.workers.dev/shop"
 SHOP_PUSH_SECRET = os.environ.get("SHOP_PUSH_SECRET", "").strip()
+DISCORD_BOT_TOKEN = os.environ.get("DISCORD_BOT_TOKEN", "").strip()
+SHOP_CHANNEL_ID = os.environ.get("SHOP_CHANNEL_ID", "").strip()
+DISCORD_API_URL = "https://discord.com/api/v10"
 
 RARE_DAYS = 180
 
@@ -33,9 +36,10 @@ def send_discord(payload):
             timeout=WEBHOOK_TIMEOUT
         )
 
-        if response.status_code == 429:
-            delay = float(response.headers.get("Retry-After", 5))
-            delay = min(delay, 30)
+    if response.status_code == 429:
+        delay = min(float(response.headers.get("Retry-After", 5)), 30)
+        time.sleep(delay + 1)
+        raise RuntimeError("Discord rate limit reached; retry workflow later")
             print(f"Discord rate limit. Waiting {delay}s", flush=True)
             time.sleep(delay + 1)
             continue
@@ -45,6 +49,60 @@ def send_discord(payload):
 
     raise RuntimeError("Discord rate limit: retries exhausted")
 
+
+def send_shop_item(item):
+    if not DISCORD_BOT_TOKEN or not SHOP_CHANNEL_ID:
+        raise RuntimeError("Missing Discord bot token or shop channel ID")
+
+    item_type = str(item.get("type") or "outfit").lower().replace(" ", "")
+
+    if item_type.startswith("jamtrack"):
+        item_type = "music"
+    elif item_type == "sidekick":
+        item_type = "pet"
+
+    name = str(item.get("name") or "").strip()
+
+    if not name:
+        return
+
+    custom_id = f"favorite|{item_type}|{quote(name, safe='')}"
+
+    embed = item.get("embed") or {}
+
+    payload = {
+        "embeds": [embed],
+        "components": [
+            {
+                "type": 1,
+                "components": [
+                    {
+                        "type": 2,
+                        "style": 3,
+                        "label": "⭐ В избранное",
+                        "custom_id": custom_id
+                    }
+                ]
+            }
+        ]
+    }
+
+    response = requests.post(
+        f"{DISCORD_API_URL}/channels/{SHOP_CHANNEL_ID}/messages",
+        headers={
+            "Authorization": f"Bot {DISCORD_BOT_TOKEN}",
+            "Content-Type": "application/json"
+        },
+        json=payload,
+        timeout=WEBHOOK_TIMEOUT
+    )
+
+    if response.status_code == 429:
+        delay = min(float(response.headers.get("Retry-After", 5)), 30)
+        time.sleep(delay + 1)
+        return send_shop_item(item)
+
+    response.raise_for_status()
 
 
 def push_favorites(shop_date, items, attribution, publish_shop=True):
