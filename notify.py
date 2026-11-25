@@ -90,9 +90,7 @@ def push_favorites(shop_date, items):
     response = requests.post(
         SHOP_PUSH_URL,
         headers={"Authorization": f"Bearer {SHOP_PUSH_SECRET}"},
-        json={"shop_date": f"{shop_date}-test",
-              "items": [{"name": "Life Will Change"}]
-        },
+        json={"shop_date": shop_date, "items": favorite_items},
         timeout=WORKER_TIMEOUT
     )
     response.raise_for_status()
