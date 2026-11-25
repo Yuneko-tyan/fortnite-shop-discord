@@ -540,29 +540,34 @@ def main():
     else:
         print("No new skins", flush=True)
 
+    
     print("Checking rare returning skins...", flush=True)
     rare_returns = find_rare_returns(items, shop_date)
 
     if rare_returns:
-        rare_embeds = []
+        print("Sending individual rare skin cards...", flush=True)
 
         for entry in rare_returns:
             item = entry["item"]
             days = entry["days"]
+
             embed = make_embed(item, shop_date, attribution)
             embed["title"] = (
                 "🔥 РЕДКОЕ ВОЗВРАЩЕНИЕ: "
                 + item.get("name", "Unknown")
             )[:256]
+
             embed["description"] += (
                 f"\n\n⏳ **Не появлялся в магазине: {days} дней!**"
             )
-            rare_embeds.append(embed)
 
-        send_batches(
-            rare_embeds,
-            "💎 **РЕДКИЕ СКИНЫ ВЕРНУЛИСЬ В МАГАЗИН!**"
-        )
+            send_shop_item({
+                **item,
+                "embed": embed
+            })
+
+            time.sleep(0.5)
+
         print(f"Rare returns found: {len(rare_returns)}", flush=True)
     else:
         print("No rare returns found (or some checks timed out).", flush=True)
