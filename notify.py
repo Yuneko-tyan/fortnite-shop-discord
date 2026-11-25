@@ -1,4 +1,6 @@
 
+from datetime import datetime, timezone
+from urllib.parse import quote
 import os
 import json
 import time
@@ -78,6 +80,87 @@ def rarity_color(item):
 
 
 def make_embed(item, shop_date, attribution):
+    
+ITEMSHOP_API_KEY = os.environ.get("ITEMSHOP_API_KEY", "").strip()
+
+RARE_DAYS = 180
+
+
+def find_rare_returns(items, shop_date):
+    if not ITEMSHOP_API_KEY:
+        raise RuntimeError(
+            "Missing ITEMSHOP_API_KEY GitHub Secret"
+        )
+
+    headers = {
+        "Authorization": f"Bearer {ITEMSHOP_API_KEY}",
+        "User-Agent": "FortniteShopDiscord/1.0"
+    }
+
+    rare_items = []
+
+    for item in items:
+        if (item.get("type") or "").lower() != "outfit":
+            continue
+
+        item_key = item.get("itemKey")
+
+        if not item_key:
+            continue
+
+        url = (
+            "https://itemshop.gg/api/v1/items/fortnite/"
+            + quote(item_key, safe=":")
+        )
+
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=20
+        )
+
+        if response.status_code == 404:
+            continue
+
+        response.raise_for_status()
+
+        data = response.json()["data"]
+        stays = data.get("stays", [])
+
+        # Ignore current appearance and find previous visits
+        previous_stays = [
+            stay for stay in stays
+            if stay.get("state") == "past"
+            and stay.get("end")
+        ]
+
+        if not previous_stays:
+            continue
+
+        last_end = max(
+            stay["end"] for stay in previous_stays
+        )
+
+        last_date = datetime.fromisoformat(
+            last_end.replace("Z", "+00:00")
+        )
+
+        current_date = datetime.fromisoformat(
+            shop_date
+        ).replace(tzinfo=timezone.utc)
+
+        days_absent = (
+            current_date - last_date
+        ).days
+
+        if days_absent >= RARE_DAYS:
+            rare_items.append({
+                "item": item,
+                "days": days_absent
+            })
+
+    return rare_items
+
     rarity = item.get("rarity") or {}
     images = item.get("images") or {}
 
@@ -235,6 +318,47 @@ def main():
         print(f"New skins: {len(new_skins)}")
     else:
         print("No new skins")
+
+    
+    # Find rare returning skins
+    rare_returns = find_rare_returns(
+        items,
+        shop_date
+    )
+
+    if rare_returns:
+        rare_embeds = []
+
+        for entry in rare_returns:
+            item = entry["item"]
+            days = entry["days"]
+
+            embed = make_embed(
+                item,
+                shop_date,
+                attribution
+            )
+
+            embed["title"] = (
+                "🔥 РЕДКОЕ ВОЗВРАЩЕНИЕ: "
+                + item.get("name", "Unknown")
+            )[:256]
+
+            embed["description"] += (
+                f"\n\n⏳ **Не появлялся в магазине: "
+                f"{days} дней!**"
+            )
+
+            rare_embeds.append(embed)
+
+        send_batches(
+            rare_embeds,
+            "💎 **РЕДКИЕ СКИНЫ ВЕРНУЛИСЬ В МАГАЗИН!**"
+        )
+
+        print(
+            f"Rare returns found: {len(rare_returns)}"
+        )
 
     # Save state only after successful notifications
     state["last_shop_date"] = shop_date
