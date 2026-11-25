@@ -40,6 +40,7 @@ jobs:
         run: python notify.py
 
       - name: Save shop state
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
