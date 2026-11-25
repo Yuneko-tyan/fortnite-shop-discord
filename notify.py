@@ -53,8 +53,20 @@ def push_favorites(shop_date, items):
     favorite_items = []
     seen_names = set()
 
+        allowed_types = {
+        "outfit",
+        "emote",
+        "backpack",
+        "pickaxe",
+        "wrap",
+        "music",
+        "jamtrack",
+        "jam_track"
+    }
+
     for item in items:
-        if (item.get("type") or "").lower() != "outfit":
+        item_type = str(item.get("type") or "").lower().replace(" ", "")
+        if item_type not in allowed_types:
             continue
 
         name = str(item.get("name") or "").strip()
