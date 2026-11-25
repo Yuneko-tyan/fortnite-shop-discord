@@ -499,10 +499,7 @@ def main():
             )
 
             time.sleep(0.5)
-
-
-
-
+    
     new_skins = []
 
     for item in items:
