@@ -58,7 +58,7 @@ def push_favorites(shop_date, items):
         "wrap", "music", "jamtrack", "jam_track",
         "glider", "contrail", "instrument", "vehicle",
         "car", "body", "decal", "spray", "toy",
-        "pet", "loadingscreen", "loading_screen",
+        "pet", "sidekick", "loadingscreen", "loading_screen",
         "banner", "emoji", "track", "consumable",
         "bundle"
     }
