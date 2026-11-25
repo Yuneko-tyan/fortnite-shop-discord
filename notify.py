@@ -73,10 +73,12 @@ def push_favorites(shop_date, items):
             continue
 
         name = str(item.get("name") or "").strip()
-
+        
         normalized_type = (
             "music"
-            if item_type in {"jamtrack", "jam_track"}
+            if item_type.startswith("jamtrack")
+            else "pet"
+            if item_type == "sidekick"
             else item_type
         )
 
