@@ -83,10 +83,8 @@ def rarity_color(item):
 
 
 def make_embed(item, shop_date, attribution):
-    
-ITEMSHOP_API_KEY = os.environ.get("ITEMSHOP_API_KEY", "").strip()
-
-RARE_DAYS = 180
+    ITEMSHOP_API_KEY = os.environ.get("ITEMSHOP_API_KEY", "").strip()
+    RARE_DAYS = 180
 
 
 def find_rare_returns(items, shop_date):
