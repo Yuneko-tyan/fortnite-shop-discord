@@ -36,6 +36,12 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: python notify.py
 
+      - name: Check Fortnite shop
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          ITEMSHOP_API_KEY: ${{ secrets.ITEMSHOP_API_KEY }}
+        run: python notify.py
+
      
       - name: Save shop state
         run: |
