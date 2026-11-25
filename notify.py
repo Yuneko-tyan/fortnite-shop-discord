@@ -347,6 +347,19 @@ def main():
             items.append(item)
 
     print(f"Collected {len(items)} shop items.", flush=True)
+    print(
+    "PERFECT NIGHT ITEMS:",
+    [
+        {
+            "name": item.get("name"),
+            "type": item.get("type"),
+            "itemKey": item.get("itemKey")
+        }
+        for item in items
+        if "perfect night" in str(item.get("name") or "").lower()
+    ],
+    flush=True
+)
 
     # Personal notifications must never block the existing public webhook.
     try:
