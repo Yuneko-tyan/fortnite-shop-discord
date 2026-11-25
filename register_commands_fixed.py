@@ -33,6 +33,7 @@ commands = [
                     "required": True,
                     "choices": [
                         {"name": "Скин", "value": "outfit"},
+                        {"name": "Питомец", "value": "pet"},
                         {"name": "Эмоция", "value": "emote"},
                         {"name": "Музыка", "value": "music"},
                         {"name": "Кирка", "value": "pickaxe"},
