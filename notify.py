@@ -52,32 +52,14 @@ def push_favorites(shop_date, items):
 
     favorite_items = []
     seen_names = set()
-    
+
     allowed_types = {
-        "outfit",
-        "emote",
-        "backpack",
-        "pickaxe",
-        "wrap",
-        "music",
-        "jamtrack",
-        "jam_track",
-        "glider",
-        "contrail",
-        "instrument",
-        "vehicle",
-        "car",
-        "body",
-        "decal",
-        "spray",
-        "toy",
-        "pet",
-        "loadingscreen",
-        "loading_screen",
-        "banner",
-        "emoji",
-        "track",
-        "consumable",
+        "outfit", "emote", "backpack", "pickaxe",
+        "wrap", "music", "jamtrack", "jam_track",
+        "glider", "contrail", "instrument", "vehicle",
+        "car", "body", "decal", "spray", "toy",
+        "pet", "loadingscreen", "loading_screen",
+        "banner", "emoji", "track", "consumable",
         "bundle"
     }
 
@@ -87,20 +69,24 @@ def push_favorites(shop_date, items):
             continue
 
         name = str(item.get("name") or "").strip()
-        key = " ".join(name.lower().split())
 
-        if not name or not key or key in seen_names:
+        normalized_type = (
+            "music"
+            if item_type in {"jamtrack", "jam_track"}
+            else item_type
+        )
+
+        key = f"{normalized_type}:{' '.join(name.lower().split())}"
+
+        if not name or key in seen_names:
             continue
 
         seen_names.add(key)
+
         favorite_items.append({
-    "name": name,
-    "type": (
-        "music"
-        if item_type in {"jamtrack", "jam_track"}
-        else item_type
-    )
-})
+            "name": name,
+            "type": normalized_type
+        })
 
     if not favorite_items:
         print("No supported items to send for personal favorites.", flush=True)
