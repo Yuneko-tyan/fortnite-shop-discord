@@ -52,34 +52,33 @@ def push_favorites(shop_date, items):
 
     favorite_items = []
     seen_names = set()
-
         allowed_types = {
-            "outfit",
-            "emote",
-            "backpack",
-            "pickaxe",
-            "wrap",
-            "music",
-            "jamtrack",
-            "jam_track",
-            "glider",
-            "contrail",
-            "instrument",
-            "vehicle",
-            "car",
-            "body",
-            "decal",
-            "spray",
-            "toy",
-            "pet",
-            "loadingscreen",
-            "loading_screen",
-            "banner",
-            "emoji",
-            "track",
-            "consumable",
-            "bundle"
-        }
+        "outfit",
+        "emote",
+        "backpack",
+        "pickaxe",
+        "wrap",
+        "music",
+        "jamtrack",
+        "jam_track",
+        "glider",
+        "contrail",
+        "instrument",
+        "vehicle",
+        "car",
+        "body",
+        "decal",
+        "spray",
+        "toy",
+        "pet",
+        "loadingscreen",
+        "loading_screen",
+        "banner",
+        "emoji",
+        "track",
+        "consumable",
+        "bundle"
+    }
 
     for item in items:
         item_type = str(item.get("type") or "").lower().replace(" ", "")
