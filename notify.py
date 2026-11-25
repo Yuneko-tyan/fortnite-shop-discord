@@ -14,6 +14,9 @@ ITEMSHOP_API_KEY = os.environ.get(
     "ITEMSHOP_API_KEY", ""
 ).strip()
 
+SHOP_PUSH_URL = "https://fortnite-favorites.kornouxova1998.workers.dev/shop"
+SHOP_PUSH_SECRET = os.environ.get("SHOP_PUSH_SECRET", "").strip()
+
 RARE_DAYS = 180
 
 def send_discord(payload):
@@ -36,6 +39,49 @@ def send_discord(payload):
         return
 
     raise RuntimeError("Discord rate limit: retries exhausted")
+
+
+
+def push_favorites(shop_date, items):
+    if not SHOP_PUSH_SECRET:
+        raise RuntimeError("Missing SHOP_PUSH_SECRET GitHub Secret")
+
+    favorite_items = []
+    seen_names = set()
+
+    for item in items:
+        if (item.get("type") or "").lower() != "outfit":
+            continue
+
+        name = str(item.get("name") or "").strip()
+        key = " ".join(name.lower().split())
+
+        if not name or not key or key in seen_names:
+            continue
+
+        seen_names.add(key)
+        # The Worker stores favorites by normalized display name, not API itemKey.
+        favorite_items.append({"name": name})
+
+    if not favorite_items:
+        print("No outfit names to send for personal favorites.")
+        return
+
+    response = requests.post(
+        SHOP_PUSH_URL,
+        headers={"Authorization": f"Bearer {SHOP_PUSH_SECRET}"},
+        json={"shop_date": shop_date, "items": favorite_items},
+        timeout=60
+    )
+    response.raise_for_status()
+
+    result = response.json()
+    print(
+        "Personal favorite notifications: "
+        f"sent={result.get('sent', 0)}, "
+        f"failed={result.get('failed', 0)}, "
+        f"skipped={result.get('skipped', 0)}"
+    )
 
 
 def load_state():
@@ -253,6 +299,9 @@ def main():
 
             seen_in_shop.add(key)
             items.append(item)
+
+    # Send outfit names to the personal favorites Worker.
+    push_favorites(shop_date, items)
 
     # Previous item database
     previous_keys = set(state.get("seen_item_keys", []))
