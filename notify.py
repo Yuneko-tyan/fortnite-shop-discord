@@ -472,33 +472,6 @@ def main():
         state["published_shop_item_keys"] = []
         save_state(state)
 
-    if items:
-        print("Sending individual shop cards to Discord...", flush=True)
-
-        for index, item in enumerate(items, start=1):
-            key = str(item.get("itemKey") or item.get("id") or "")
-
-            if not key or key in published_keys:
-                continue
-
-            embed = make_embed(item, shop_date, attribution)
-
-            send_shop_item({
-                **item,
-                "embed": embed
-            })
-
-            published_keys.add(key)
-            state["published_shop_item_keys"] = sorted(published_keys)
-            save_state(state)
-
-            print(
-                f"Published shop card {index}/{len(items)}: "
-                f"{item.get('name', 'Unknown')}",
-                flush=True
-            )
-
-            time.sleep(0.5)
     
     new_skins = []
 
@@ -518,59 +491,66 @@ def main():
         if is_new:
             new_skins.append(item)
 
-    
-    if new_skins:
-        print("Sending individual new skin cards...", flush=True)
+    new_skin_keys = {
+        str(item.get("itemKey") or item.get("id") or "")
+        for item in new_skins
+    }
 
-        for item in new_skins:
-            embed = make_embed(item, shop_date, attribution)
-            embed["title"] = (
-                "✨ НОВЫЙ СКИН: "
-                + (item.get("name") or "Unknown")
-            )[:256]
-
-            send_shop_item({
-                **item,
-                "embed": embed
-            })
-
-            time.sleep(0.5)
-
-        print(f"New skins: {len(new_skins)}", flush=True)
-    else:
-        print("No new skins", flush=True)
-
-    
     print("Checking rare returning skins...", flush=True)
     rare_returns = find_rare_returns(items, shop_date)
 
-    if rare_returns:
-        print("Sending individual rare skin cards...", flush=True)
+    rare_by_key = {
+        str(entry["item"].get("itemKey") or entry["item"].get("id") or ""): entry
+        for entry in rare_returns
+    }
 
-        for entry in rare_returns:
-            item = entry["item"]
-            days = entry["days"]
+    if items:
+        print("Sending individual shop cards to Discord...", flush=True)
+
+        for index, item in enumerate(items, start=1):
+            key = str(item.get("itemKey") or item.get("id") or "")
+
+            if not key or key in published_keys:
+                continue
 
             embed = make_embed(item, shop_date, attribution)
-            embed["title"] = (
-                "🔥 РЕДКОЕ ВОЗВРАЩЕНИЕ: "
-                + item.get("name", "Unknown")
-            )[:256]
 
-            embed["description"] += (
-                f"\n\n⏳ **Не появлялся в магазине: {days} дней!**"
-            )
+            if key in new_skin_keys:
+                embed["title"] = (
+                    "✨ НОВЫЙ СКИН: "
+                    + (item.get("name") or "Unknown")
+                )[:256]
+
+            elif key in rare_by_key:
+                entry = rare_by_key[key]
+                embed["title"] = (
+                    "🔥 РЕДКОЕ ВОЗВРАЩЕНИЕ: "
+                    + (item.get("name") or "Unknown")
+                )[:256]
+                embed["description"] += (
+                    f"\n\n⏳ **Не появлялся в магазине: {entry['days']} дней!**"
+                )
 
             send_shop_item({
                 **item,
                 "embed": embed
             })
 
+            published_keys.add(key)
+            state["published_shop_item_keys"] = sorted(published_keys)
+            save_state(state)
+
+            print(
+                f"Published shop card {index}/{len(items)}: "
+                f"{item.get('name', 'Unknown')}",
+                flush=True
+            )
+
             time.sleep(0.5)
 
-        print(f"Rare returns found: {len(rare_returns)}", flush=True)
-    else:
-        print("No rare returns found (or some checks timed out).", flush=True)
+    print(f"New skins: {len(new_skins)}", flush=True)
+    print(f"Rare returns found: {len(rare_returns)}", flush=True)
+
 
     # Save state after the existing public notifications complete.
     state["last_shop_date"] = shop_date
